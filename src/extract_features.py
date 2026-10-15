@@ -7,21 +7,20 @@ from dataset_loader import get_gtsrb_dataloaders
 from corruptions import get_required_corruptions, apply_corruption
 
 def extract_and_save_features():
-    # Setup device
+   
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
    
-    # Load DINOv2 backbone (acts purely as a feature extractor without a classification head)
+    
     model_name = "facebook/dinov2-small"
     processor = AutoImageProcessor.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name).to(device)
     model.eval()
    
-    # Output directory for saved embeddings
-    output_dir = "data/processed_features"
+    output_dir = "data/processed_features_gtsrb"
     os.makedirs(output_dir, exist_ok=True)
    
-    # Get dataloaders from Step 1
+
     train_loader, test_loader, classes = get_gtsrb_dataloaders()
    
     print("\n--- Extracting Training Features ---")
@@ -29,10 +28,10 @@ def extract_and_save_features():
     with torch.no_grad():
         for images, labels in tqdm(train_loader):
             images = images.to(device)
-            # Forward pass through DINOv2
+            
             outputs = model(images)
-            # Use the pooler output or class token representation as the feature vector
-            features = outputs.last_hidden_state[:, 0, :] # Extract [CLS] token embedding
+            
+            features = outputs.last_hidden_state[:, 0, :] 
            
             train_features.append(features.cpu().numpy())
             train_labels.append(labels.numpy())
@@ -58,8 +57,8 @@ def extract_and_save_features():
     test_features = np.vstack(test_features)
     test_labels = np.concatenate(test_labels)
    
-    np.save(os.path.join(output_dir, "test_features_clean.npy"), test_features)
-    np.save(os.path.join(output_dir, "test_labels.npy"), test_labels)
+    np.save(os.path.join(output_dir, "val_features_clean.npy"), test_features)
+    np.save(os.path.join(output_dir, "val_labels.npy"), test_labels)
     print("Clean test features saved successfully!")
 
 if __name__ == "__main__":

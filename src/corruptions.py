@@ -1,4 +1,8 @@
 import numpy as np
+
+if not hasattr(np, "float_"):
+    np.float_ = np.float64
+
 from imagecorruptions import corrupt, get_corruption_names
 
 def apply_corruption(image_np, corruption_name, severity):

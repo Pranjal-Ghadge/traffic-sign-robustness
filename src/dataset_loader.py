@@ -1,55 +1,76 @@
+
 import os
 import torch
 from torchvision.datasets import ImageFolder
-from torch.utils.data import DataLoader, random_split
+from torchvision import transforms
+from torch.utils.data import DataLoader, Subset
 from transformers import AutoImageProcessor
+from sklearn.model_selection import train_test_split
 
-def get_gtsrb_dataloaders(data_dir="data/GTSRB", batch_size=32, train_split=0.8):
-    """
-    Loads GTSRB dataset, applies DINOv2 preprocessing, splits into train/test, 
-    and returns PyTorch DataLoaders.
-    """
-    model_name = "facebook/dinov2-small"
-    processor = AutoImageProcessor.from_pretrained(model_name)
-    
-    # DINOv2 expects standard image transformations handled by the processor,
-    # but we can wrap it using standard torchvision transforms or process on-the-fly.
-    # Here we use standard torchvision resizing/normalization matching DINOv2 stats:
-    from torchvision import transforms
-    
+
+def get_gtsrb_dataloaders(
+    data_dir="data/GTSRB",
+    batch_size=32,
+    train_split=0.8
+):
+    processor = AutoImageProcessor.from_pretrained(
+        "facebook/dinov2-small"
+    )
+
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(
-            mean=processor.image_mean, 
+            mean=processor.image_mean,
             std=processor.image_std
-        ),
+        )
     ])
-    
-    # Load dataset using ImageFolder (assumes structure: data/GTSRB/train/class_folders/images)
-    # If your GTSRB folder contains subfolders for classes directly, point to that folder.
-    if not os.path.exists(data_dir):
-        raise FileNotFoundError(f"Dataset path {data_dir} not found. Please check your folder structure.")
-        
-    dataset = ImageFolder(root=data_dir, transform=transform)
-    
-    # Calculate split sizes
-    train_size = int(train_split * len(dataset))
-    test_size = len(dataset) - train_size
-    
-    # Split dataset
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-    
-    # Create DataLoaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
-    
-    print(f"Dataset loaded successfully!")
+
+    train_dir = os.path.join(data_dir, "Train")
+
+    if not os.path.isdir(train_dir):
+        raise FileNotFoundError(
+            f"Training folder not found: {train_dir}"
+        )
+
+    dataset = ImageFolder(
+        root=train_dir,
+        transform=transform
+    )
+    indices = list(range(len(dataset)))
+
+    train_indices, val_indices = train_test_split(
+        indices,
+        train_size=train_split,
+        random_state=42,
+        stratify=dataset.targets
+    )
+
+    train_dataset = Subset(dataset, train_indices)
+    val_dataset = Subset(dataset, val_indices)
+
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0
+    )
+
+    print("Dataset loaded successfully!")
     print(f"Total classes: {len(dataset.classes)}")
-    print(f"Training samples: {train_size}, Testing samples: {test_size}")
-    
-    return train_loader, test_loader, dataset.classes
+    print(f"Total images: {len(dataset)}")
+    print(f"Training samples: {len(train_dataset)}")
+    print(f"Validation samples: {len(val_dataset)}")
+
+    return train_loader, val_loader, dataset.classes
+
 
 if __name__ == "__main__":
-    # Test the loader script
-    train_loader, test_loader, classes = get_gtsrb_dataloaders()
+    get_gtsrb_dataloaders()
