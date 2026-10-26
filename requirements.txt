@@ -9,3 +9,5 @@ torch
 torchvision
 transformers
 jupyter
+imagecorruptions
+tqdm

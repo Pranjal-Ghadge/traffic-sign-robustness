@@ -13,8 +13,8 @@ from tqdm import tqdm
 
 from corruptions import apply_corruption
 
-CORRUPTION = "clean"
-SEVERITY = 1
+CORRUPTION = "gaussian_noise"
+SEVERITY = 3
 NUM_IMAGES = 7842
 BATCH_SIZE = 8
 SEED = 42
