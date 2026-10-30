@@ -27,7 +27,6 @@ RESULTS_FILE = "results/gtsrb_corruption_results.csv"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-# Do not add a duplicate result
 with open(RESULTS_FILE, "r", newline="") as f:
     rows = list(csv.DictReader(f))
 
