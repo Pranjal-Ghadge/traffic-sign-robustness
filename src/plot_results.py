@@ -3,17 +3,14 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load experiment results
 results=pd.read_csv("results/gtsrb_corruption_results.csv")
 
 os.makedirs("results/plots", exist_ok=True)
 
-# Convert columns to numeric
 results["severity"]=pd.to_numeric(results["severity"])
 results["accuracy"]=pd.to_numeric(results["accuracy"])*100
 results["macro_f1"]=pd.to_numeric(results["macro_f1"])
 
-# Plot 1: Accuracy vs severity
 plt.figure(figsize=(12, 7))
 
 for corruption in results["corruption"].unique():
@@ -30,7 +27,6 @@ plt.tight_layout()
 plt.savefig("results/plots/accuracy_vs_severity.pdf", bbox_inches="tight")
 plt.close()
 
-# Plot 2: Macro-F1 vs severity
 plt.figure(figsize=(12, 7))
 
 for corruption in results["corruption"].unique():

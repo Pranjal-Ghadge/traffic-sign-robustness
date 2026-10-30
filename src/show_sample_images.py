@@ -20,13 +20,10 @@ fig,axes=plt.subplots(3,3,figsize=(12,10))
 for row,idx in enumerate(samples):
     path,label=dataset.samples[idx]
 
-    # Load original image
     original=np.array(Image.open(path).convert("RGB"))
 
-    # Apply Gaussian blur
     blurred=cv2.GaussianBlur(original,(0,0),2)
 
-    # Sharpen the original image using unsharp masking
     smooth=cv2.GaussianBlur(original,(0,0),2)
     sharpened=cv2.addWeighted(original,2.0,smooth,-1.0,0)
     sharpened=np.clip(sharpened,0,255).astype(np.uint8)
@@ -51,7 +48,6 @@ for row,idx in enumerate(samples):
 
 plt.tight_layout()
 
-# Save comparison figures
 plt.savefig(
     os.path.join(output_dir,"comparison.png"),
     dpi=300,bbox_inches="tight"
